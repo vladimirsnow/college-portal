@@ -1,4 +1,7 @@
 'use client'
+
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
@@ -8,7 +11,7 @@ function ChangePasswordContent() {
   const [pass2, setPass2] = useState('')
   const [loading, setLoading] = useState(false)
   const [currentCode, setCurrentCode] = useState(null)
-  
+
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -31,25 +34,25 @@ function ChangePasswordContent() {
 
     try {
       console.log("Attempting update for:", currentCode)
-      
+
       const { data, error } = await supabase
         .from('registration_codes')
-        .update({ 
+        .update({
           password: pass1,
-          is_password_changed: true 
+          is_password_changed: true
         })
         .eq('code', currentCode) // Фильтр по ИИН
         .select() // Просим вернуть измененные данные
 
       if (error) throw error
-      
+
       if (data && data.length === 0) {
         throw new Error("Запись с таким ИИН не найдена в базе!")
       }
 
       console.log("Success update:", data)
       alert("✅ Пароль успешно изменен! Войдите под новым паролем.")
-      router.push('/') 
+      router.push('/')
     } catch (error) {
       console.error("Supabase Error:", error)
       alert("Ошибка: " + (error.message || "Неизвестная ошибка"))
@@ -86,9 +89,8 @@ function ChangePasswordContent() {
           <button
             type="submit"
             disabled={loading || !currentCode}
-            className={`w-full py-4 rounded-xl font-bold text-white transition-all ${
-              loading ? 'bg-purple-300' : 'bg-purple-600 hover:bg-purple-700'
-            }`}
+            className={`w-full py-4 rounded-xl font-bold text-white transition-all ${loading ? 'bg-purple-300' : 'bg-purple-600 hover:bg-purple-700'
+              }`}
           >
             {loading ? 'Сохранение...' : 'Подтвердить смену'}
           </button>
