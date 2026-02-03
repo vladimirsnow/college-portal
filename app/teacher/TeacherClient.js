@@ -247,7 +247,7 @@ export default function TeacherClient() {
                         <select
                             value={group}
                             onChange={e => setGroup(e.target.value)}
-                            className="w-full md:w-64 p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-300 font-bold text-slate-700"
+                            className="w-full md:w-64 p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-300 font-bold text-slate-900"
                         >
                             {groups.map(g => (
                                 <option key={g} value={g}>{g}</option>
@@ -267,8 +267,8 @@ export default function TeacherClient() {
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === tab
-                                    ? 'bg-purple-600 text-white'
-                                    : 'text-slate-600 hover:text-slate-800'
+                                ? 'bg-purple-600 text-white'
+                                : 'text-slate-600 hover:text-slate-800'
                                 }`}
                         >
                             {tab === 'homework' && '📚 Домашние задания'}
@@ -302,7 +302,7 @@ export default function TeacherClient() {
 
                             <textarea
                                 placeholder="Описание задания..."
-                                className="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 h-40"
+                                className="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 h-40 text-slate-900"
                                 value={task}
                                 onChange={e => setTask(e.target.value)}
                             />
@@ -312,7 +312,7 @@ export default function TeacherClient() {
                                 type="date"
                                 value={deadline}
                                 onChange={e => setDeadline(e.target.value)}
-                                className="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-200"
+                                className="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 text-slate-900"
                             />
 
                             <button
@@ -368,7 +368,7 @@ export default function TeacherClient() {
                             <select
                                 value={subject}
                                 onChange={e => setSubject(e.target.value)}
-                                className="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-200"
+                                className="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 text-slate-900"
                             >
                                 <option value="">Выбрать предмет...</option>
                                 {subjects.map(s => (
@@ -384,7 +384,7 @@ export default function TeacherClient() {
                                     setSelectedStudent(e.target.value)
                                     setSelectedStudentName(selected?.full_name || '')
                                 }}
-                                className="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-200"
+                                className="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 text-slate-900"
                             >
                                 <option value="">Выбрать студента...</option>
                                 {allStudents.map(s => (
@@ -399,7 +399,7 @@ export default function TeacherClient() {
                                 placeholder="Баллы (1-100)"
                                 min="1"
                                 max="100"
-                                className="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-200"
+                                className="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 text-slate-900"
                                 value={grade}
                                 onChange={e => setGrade(e.target.value)}
                             />
@@ -407,7 +407,7 @@ export default function TeacherClient() {
                             <label className="block text-sm font-bold text-slate-600 mb-2">Комментарий (опционально):</label>
                             <textarea
                                 placeholder="Добавь комментарий к оценке..."
-                                className="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 h-24 resize-none"
+                                className="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 h-24 resize-none text-slate-900"
                                 value={gradeComment}
                                 onChange={e => setGradeComment(e.target.value)}
                             />
@@ -443,7 +443,7 @@ export default function TeacherClient() {
                                                                 max="100"
                                                                 value={editingGradeValue}
                                                                 onChange={e => setEditingGradeValue(e.target.value)}
-                                                                className="flex-1 p-2 bg-white border border-purple-200 rounded-lg text-center"
+                                                                className="flex-1 p-2 bg-white border border-purple-200 rounded-lg text-center text-slate-900"
                                                             />
                                                         </div>
                                                         <textarea
