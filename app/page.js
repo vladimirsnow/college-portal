@@ -103,7 +103,7 @@ export default function LoginPage() {
             <input
               type="text"
               placeholder="Логин или ИИН"
-              className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-4 bg-slate-50 border border-slate-100 rounded-lg sm:rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 transition-all text-slate-700 text-sm sm:text-base"
+              className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-4 bg-slate-50 border border-slate-100 rounded-lg sm:rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 transition-all text-slate-900 text-sm sm:text-base"
               value={login}
               onChange={(e) => setLogin(e.target.value)}
               required
@@ -115,7 +115,7 @@ export default function LoginPage() {
             <input
               type="password"
               placeholder="Пароль"
-              className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-4 bg-slate-50 border border-slate-100 rounded-lg sm:rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 transition-all text-slate-700 text-sm sm:text-base"
+              className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-4 bg-slate-50 border border-slate-100 rounded-lg sm:rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 transition-all text-slate-900 text-sm sm:text-base"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

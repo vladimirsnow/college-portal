@@ -67,7 +67,7 @@ export default function ChangePasswordClient() {
                     <input
                         type="password"
                         placeholder="Новый пароль"
-                        className="w-full p-2.5 sm:p-3 bg-slate-50 border border-slate-200 rounded-lg sm:rounded-xl outline-none focus:ring-2 focus:ring-purple-300 text-slate-800 text-sm sm:text-base"
+                        className="w-full p-2.5 sm:p-3 bg-slate-50 border border-slate-200 rounded-lg sm:rounded-xl outline-none focus:ring-2 focus:ring-purple-300 text-slate-900 text-sm sm:text-base"
                         value={pass1}
                         onChange={(e) => setPass1(e.target.value)}
                         required
@@ -75,7 +75,7 @@ export default function ChangePasswordClient() {
                     <input
                         type="password"
                         placeholder="Повторите пароль"
-                        className="w-full p-2.5 sm:p-3 bg-slate-50 border border-slate-200 rounded-lg sm:rounded-xl outline-none focus:ring-2 focus:ring-purple-300 text-slate-800 text-sm sm:text-base"
+                        className="w-full p-2.5 sm:p-3 bg-slate-50 border border-slate-200 rounded-lg sm:rounded-xl outline-none focus:ring-2 focus:ring-purple-300 text-slate-900 text-sm sm:text-base"
                         value={pass2}
                         onChange={(e) => setPass2(e.target.value)}
                         required

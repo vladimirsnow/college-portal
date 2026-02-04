@@ -217,10 +217,7 @@ export default function TeacherClient() {
         if (!editingGradeId) return
         setLoading(true)
         try {
-            const result = await updateGrade(editingGradeId, {
-                grade_value: parseInt(editingGradeValue, 10),
-                comment: editingGradeComment
-            })
+            const result = await updateGrade(editingGradeId, parseInt(editingGradeValue, 10), editingGradeComment)
             if (result.success) {
                 alert('Оценка обновлена')
                 setEditingGradeId(null)
@@ -475,7 +472,7 @@ export default function TeacherClient() {
                                                             placeholder="Комментарий..."
                                                             value={editingGradeComment}
                                                             onChange={e => setEditingGradeComment(e.target.value)}
-                                                            className="w-full p-2 bg-white border border-purple-200 rounded-lg text-sm resize-none h-16"
+                                                            className="w-full p-2 bg-white border border-purple-200 rounded-lg text-sm resize-none h-16 text-slate-900"
                                                         />
                                                         <div className="flex gap-2">
                                                             <button
