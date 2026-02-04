@@ -13,6 +13,7 @@ import {
     createGrade,
     updateGrade,
     deleteHomework,
+    deleteGrade,
     getGradeColor
 } from '@/lib/api/dataService'
 
@@ -190,6 +191,22 @@ export default function TeacherClient() {
         }
     }
 
+    const handleDeleteGrade = async (id) => {
+        if (!confirm('Удалить эту оценку?')) return
+        setLoading(true)
+        try {
+            const result = await deleteGrade(id)
+            if (result.success) {
+                alert('Оценка удалена')
+                await fetchGradesList()
+            } else {
+                alert('Ошибка: ' + result.error)
+            }
+        } finally {
+            setLoading(false)
+        }
+    }
+
     const handleEditGrade = (id, value, comment) => {
         setEditingGradeId(id)
         setEditingGradeValue(value)
@@ -220,79 +237,87 @@ export default function TeacherClient() {
         <div className="min-h-screen bg-slate-50">
             {/* Header */}
             <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
-                <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="bg-purple-600 p-3 rounded-2xl">
-                            <BookOpen className="w-6 h-6 text-white" />
+                <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2 sm:gap-4">
+                    <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                        <div className="bg-purple-600 p-2 sm:p-3 rounded-xl sm:rounded-2xl flex-shrink-0">
+                            <BookOpen className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                         </div>
-                        <div>
-                            <h1 className="text-2xl font-bold text-slate-800">Панель преподавателя</h1>
-                            <p className="text-sm text-slate-500">Преподаватель: {teacherName || 'Загрузка...'}</p>
+                        <div className="min-w-0">
+                            <h1 className="text-lg sm:text-2xl font-bold text-slate-800 truncate">Панель преподавателя</h1>
+                            <p className="text-xs sm:text-sm text-slate-500 truncate">Преподаватель: {teacherName || 'Загрузка...'}</p>
                         </div>
                     </div>
                     <button
                         onClick={handleLogout}
-                        className="flex items-center gap-2 px-6 py-3 text-red-600 hover:bg-red-50 rounded-2xl transition-all font-bold"
+                        className="flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 text-red-600 hover:bg-red-50 rounded-lg sm:rounded-2xl transition-all font-bold text-sm sm:text-base flex-shrink-0"
                     >
-                        <LogOut className="w-5 h-5" /> Выйти
+                        <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span className="hidden sm:inline">Выйти</span>
                     </button>
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-6 py-8">
+            <main className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8">
                 {/* Выбор группы */}
-                <div className="mb-8 bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100">
-                    <label className="block text-sm font-bold text-slate-600 mb-3">Выберите группу:</label>
+                <div className="mb-6 sm:mb-8 bg-white p-4 sm:p-6 rounded-2xl sm:rounded-[2.5rem] shadow-sm border border-slate-100">
+                    <label className="block text-xs sm:text-sm font-bold text-slate-600 mb-2 sm:mb-3">Выберите группу:</label>
                     {groups.length > 0 ? (
                         <select
                             value={group}
                             onChange={e => setGroup(e.target.value)}
-                            className="w-full md:w-64 p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-300 font-bold text-slate-900"
+                            className="w-full p-3 sm:p-4 bg-slate-50 border border-slate-200 rounded-xl sm:rounded-2xl outline-none focus:ring-2 focus:ring-purple-300 font-bold text-sm sm:text-base text-slate-900"
                         >
                             {groups.map(g => (
                                 <option key={g} value={g}>{g}</option>
                             ))}
                         </select>
                     ) : (
-                        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-2xl text-yellow-700 text-sm">
+                        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-xl sm:rounded-2xl text-yellow-700 text-xs sm:text-sm">
                             Нет групп в базе данных. Добавьте студентов в группы.
                         </div>
                     )}
                 </div>
 
                 {/* Табы */}
-                <div className="flex gap-3 mb-8 bg-white p-2 rounded-2xl w-fit border border-slate-100">
+                <div className="flex flex-wrap gap-2 sm:gap-3 mb-6 sm:mb-8 bg-white p-2 rounded-xl sm:rounded-2xl w-full sm:w-fit border border-slate-100 ">
                     {['homework', 'grades', 'students'].map(tab => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
-                            className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === tab
+                            className={`px-3 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm transition-all flex-1 sm:flex-none ${activeTab === tab
                                 ? 'bg-purple-600 text-white'
                                 : 'text-slate-600 hover:text-slate-800'
                                 }`}
                         >
-                            {tab === 'homework' && '📚 Домашние задания'}
-                            {tab === 'grades' && '⭐ Оценки'}
-                            {tab === 'students' && '👥 Студенты'}
+                            <span className="hidden sm:inline">
+                                {tab === 'homework' && '📚 Домашние задания'}
+                                {tab === 'grades' && '⭐ Оценки'}
+                                {tab === 'students' && '👥 Студенты'}
+                            </span>
+                            <span className="sm:hidden">
+                                {tab === 'homework' && '📚'}
+                                {tab === 'grades' && '⭐'}
+                                {tab === 'students' && '👥'}
+                            </span>
                         </button>
                     ))}
                 </div>
 
                 {/* Вкладка: Домашние задания */}
                 {activeTab === 'homework' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
                         {/* Форма добавления ДЗ */}
-                        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 h-fit">
-                            <div className="flex items-center gap-3 mb-6 text-purple-600">
-                                <PlusCircle size={24} />
-                                <h2 className="text-xl font-bold">Новое задание</h2>
+                        <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-[2.5rem] shadow-sm border border-slate-100 h-fit">
+                            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 text-purple-600">
+                                <PlusCircle size={20} className="sm:w-6 sm:h-6" />
+                                <h2 className="text-lg sm:text-xl font-bold">Новое задание</h2>
                             </div>
 
-                            <label className="block text-sm font-bold text-slate-600 mb-2">Выберите предмет:</label>
+                            <label className="block text-xs sm:text-sm font-bold text-slate-600 mb-1 sm:mb-2">Выберите предмет:</label>
                             <select
                                 value={subject}
                                 onChange={e => setSubject(e.target.value)}
-                                className="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-200"
+                                className="w-full p-3 sm:p-4 mb-3 sm:mb-4 bg-slate-50 border border-slate-200 rounded-lg sm:rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 text-sm sm:text-base"
                             >
                                 <option value="">Выбрать предмет...</option>
                                 {subjects.map(s => (
@@ -302,52 +327,52 @@ export default function TeacherClient() {
 
                             <textarea
                                 placeholder="Описание задания..."
-                                className="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 h-40 text-slate-900"
+                                className="w-full p-3 sm:p-4 mb-3 sm:mb-4 bg-slate-50 border border-slate-200 rounded-lg sm:rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 h-24 sm:h-40 text-slate-900 text-sm sm:text-base"
                                 value={task}
                                 onChange={e => setTask(e.target.value)}
                             />
 
-                            <label className="block text-sm font-bold text-slate-600 mb-2">Срок выполнения:</label>
+                            <label className="block text-xs sm:text-sm font-bold text-slate-600 mb-1 sm:mb-2">Срок выполнения:</label>
                             <input
                                 type="date"
                                 value={deadline}
                                 onChange={e => setDeadline(e.target.value)}
-                                className="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 text-slate-900"
+                                className="w-full p-3 sm:p-4 mb-3 sm:mb-4 bg-slate-50 border border-slate-200 rounded-lg sm:rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 text-slate-900 text-sm sm:text-base"
                             />
 
                             <button
                                 onClick={handleAddHW}
                                 disabled={loading}
-                                className="w-full bg-purple-600 text-white font-bold py-4 rounded-2xl hover:bg-purple-700 transition-all shadow-lg shadow-purple-200 disabled:opacity-50"
+                                className="w-full bg-purple-600 text-white font-bold py-3 sm:py-4 rounded-lg sm:rounded-2xl hover:bg-purple-700 transition-all shadow-lg shadow-purple-200 disabled:opacity-50 text-sm sm:text-base"
                             >
                                 {loading ? 'Публикация...' : 'Опубликовать ДЗ'}
                             </button>
                         </div>
 
                         {/* Список ДЗ */}
-                        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-                            <h2 className="text-xl font-bold text-purple-600 mb-6">Актуальные задания</h2>
-                            <div className="space-y-4 max-h-96 overflow-y-auto">
+                        <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-[2.5rem] shadow-sm border border-slate-100">
+                            <h2 className="text-lg sm:text-xl font-bold text-purple-600 mb-4 sm:mb-6">Актуальные задания</h2>
+                            <div className="space-y-3 sm:space-y-4 max-h-96 overflow-y-auto">
                                 {homeworks.length > 0 ? (
                                     homeworks.map(hw => (
-                                        <div key={hw.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                                            <div className="flex justify-between items-start">
-                                                <div className="flex-1">
-                                                    <div className="font-bold text-purple-600">{hw.subject}</div>
-                                                    <div className="text-sm text-slate-600 mt-2">{hw.task_text}</div>
-                                                    <div className="text-xs text-slate-400 mt-2">Срок: {hw.deadline}</div>
+                                        <div key={hw.id} className="p-3 sm:p-4 bg-slate-50 rounded-lg sm:rounded-2xl border border-slate-200">
+                                            <div className="flex justify-between items-start gap-2">
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="font-bold text-purple-600 text-sm sm:text-base">{hw.subject}</div>
+                                                    <div className="text-xs sm:text-sm text-slate-600 mt-1 sm:mt-2 line-clamp-2">{hw.task_text}</div>
+                                                    <div className="text-xs text-slate-400 mt-1 sm:mt-2">Срок: {hw.deadline}</div>
                                                 </div>
                                                 <button
                                                     onClick={() => handleDeleteHW(hw.id)}
-                                                    className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all"
+                                                    className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all flex-shrink-0"
                                                 >
-                                                    <Trash2 size={18} />
+                                                    <Trash2 size={16} className="sm:w-5 sm:h-5" />
                                                 </button>
                                             </div>
                                         </div>
                                     ))
                                 ) : (
-                                    <p className="text-center text-slate-400 py-4">Нет заданий</p>
+                                    <p className="text-center text-slate-400 py-4 text-sm sm:text-base">Нет заданий</p>
                                 )}
                             </div>
                         </div>
@@ -356,19 +381,19 @@ export default function TeacherClient() {
 
                 {/* Вкладка: Оценки */}
                 {activeTab === 'grades' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
                         {/* Форма выставления оценок */}
-                        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 h-fit">
-                            <div className="flex items-center gap-3 mb-6 text-purple-600">
-                                <Star size={24} />
-                                <h2 className="text-xl font-bold">Выставить оценку</h2>
+                        <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-[2.5rem] shadow-sm border border-slate-100 h-fit">
+                            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 text-purple-600">
+                                <Star size={20} className="sm:w-6 sm:h-6" />
+                                <h2 className="text-lg sm:text-xl font-bold">Выставить оценку</h2>
                             </div>
 
-                            <label className="block text-sm font-bold text-slate-600 mb-2">Выберите предмет:</label>
+                            <label className="block text-xs sm:text-sm font-bold text-slate-600 mb-1 sm:mb-2">Выберите предмет:</label>
                             <select
                                 value={subject}
                                 onChange={e => setSubject(e.target.value)}
-                                className="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 text-slate-900"
+                                className="w-full p-3 sm:p-4 mb-3 sm:mb-4 bg-slate-50 border border-slate-200 rounded-lg sm:rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 text-slate-900 text-sm sm:text-base"
                             >
                                 <option value="">Выбрать предмет...</option>
                                 {subjects.map(s => (
@@ -376,7 +401,7 @@ export default function TeacherClient() {
                                 ))}
                             </select>
 
-                            <label className="block text-sm font-bold text-slate-600 mb-2">Выберите студента:</label>
+                            <label className="block text-xs sm:text-sm font-bold text-slate-600 mb-1 sm:mb-2">Выберите студента:</label>
                             <select
                                 value={selectedStudent}
                                 onChange={e => {
@@ -384,7 +409,7 @@ export default function TeacherClient() {
                                     setSelectedStudent(e.target.value)
                                     setSelectedStudentName(selected?.full_name || '')
                                 }}
-                                className="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 text-slate-900"
+                                className="w-full p-3 sm:p-4 mb-3 sm:mb-4 bg-slate-50 border border-slate-200 rounded-lg sm:rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 text-slate-900 text-sm sm:text-base"
                             >
                                 <option value="">Выбрать студента...</option>
                                 {allStudents.map(s => (
@@ -399,15 +424,15 @@ export default function TeacherClient() {
                                 placeholder="Баллы (1-100)"
                                 min="1"
                                 max="100"
-                                className="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 text-slate-900"
+                                className="w-full p-3 sm:p-4 mb-3 sm:mb-4 bg-slate-50 border border-slate-200 rounded-lg sm:rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 text-slate-900 text-sm sm:text-base"
                                 value={grade}
                                 onChange={e => setGrade(e.target.value)}
                             />
 
-                            <label className="block text-sm font-bold text-slate-600 mb-2">Комментарий (опционально):</label>
+                            <label className="block text-xs sm:text-sm font-bold text-slate-600 mb-1 sm:mb-2">Комментарий (опционально):</label>
                             <textarea
                                 placeholder="Добавь комментарий к оценке..."
-                                className="w-full p-4 mb-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 h-24 resize-none text-slate-900"
+                                className="w-full p-3 sm:p-4 mb-3 sm:mb-4 bg-slate-50 border border-slate-200 rounded-lg sm:rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 h-20 sm:h-24 resize-none text-slate-900 text-sm sm:text-base"
                                 value={gradeComment}
                                 onChange={e => setGradeComment(e.target.value)}
                             />
@@ -415,27 +440,27 @@ export default function TeacherClient() {
                             <button
                                 onClick={handleAddGrade}
                                 disabled={loading}
-                                className="w-full bg-slate-800 text-white font-bold py-4 rounded-2xl hover:bg-slate-900 transition-all shadow-lg disabled:opacity-50"
+                                className="w-full bg-slate-800 text-white font-bold py-3 sm:py-4 rounded-lg sm:rounded-2xl hover:bg-slate-900 transition-all shadow-lg disabled:opacity-50 text-sm sm:text-base"
                             >
                                 {loading ? 'Сохранение...' : 'Выставить оценку'}
                             </button>
                         </div>
 
                         {/* История оценок */}
-                        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-                            <h2 className="text-xl font-bold text-purple-600 mb-6">История оценок</h2>
-                            <div className="space-y-4 max-h-96 overflow-y-auto">
+                        <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-[2.5rem] shadow-sm border border-slate-100">
+                            <h2 className="text-lg sm:text-xl font-bold text-purple-600 mb-4 sm:mb-6">История оценок</h2>
+                            <div className="space-y-3 sm:space-y-4 max-h-96 overflow-y-auto">
                                 {grades.length > 0 ? (
                                     grades.map((g) => (
-                                        <div key={g.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                                            <div className="flex justify-between items-start gap-3">
-                                                <div className="flex-1">
-                                                    <div className="font-bold text-slate-800">{g.subject}</div>
-                                                    <div className="text-sm text-slate-600">Студент: {g.student_id}</div>
+                                        <div key={g.id} className="p-3 sm:p-4 bg-slate-50 rounded-lg sm:rounded-2xl border border-slate-200">
+                                            <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-2 sm:gap-3">
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="font-bold text-slate-800 text-sm sm:text-base">{g.subject}</div>
+                                                    <div className="text-xs sm:text-sm text-slate-600 truncate">Студент: {g.student_id}</div>
                                                     <div className="text-xs text-slate-400">Дата: {new Date(g.created_at).toLocaleDateString('ru-RU')}</div>
                                                 </div>
                                                 {editingGradeId === g.id ? (
-                                                    <div className="w-full flex flex-col gap-2">
+                                                    <div className="w-full flex flex-col gap-2 mt-2 sm:mt-0">
                                                         <div className="flex gap-2">
                                                             <input
                                                                 type="number"
@@ -443,7 +468,7 @@ export default function TeacherClient() {
                                                                 max="100"
                                                                 value={editingGradeValue}
                                                                 onChange={e => setEditingGradeValue(e.target.value)}
-                                                                className="flex-1 p-2 bg-white border border-purple-200 rounded-lg text-center text-slate-900"
+                                                                className="flex-1 p-2 bg-white border border-purple-200 rounded-lg text-center text-slate-900 text-sm"
                                                             />
                                                         </div>
                                                         <textarea
@@ -456,27 +481,35 @@ export default function TeacherClient() {
                                                             <button
                                                                 onClick={handleUpdateGrade}
                                                                 disabled={loading}
-                                                                className="flex-1 bg-green-500 text-white px-3 py-2 rounded-lg hover:bg-green-600 transition-all text-sm font-bold"
+                                                                className="flex-1 bg-green-500 text-white px-3 py-2 rounded-lg hover:bg-green-600 transition-all text-xs sm:text-sm font-bold"
                                                             >
                                                                 ✓ Сохранить
                                                             </button>
                                                             <button
                                                                 onClick={() => setEditingGradeId(null)}
-                                                                className="flex-1 bg-gray-400 text-white px-3 py-2 rounded-lg hover:bg-gray-500 transition-all text-sm font-bold"
+                                                                className="flex-1 bg-gray-400 text-white px-3 py-2 rounded-lg hover:bg-gray-500 transition-all text-xs sm:text-sm font-bold"
                                                             >
                                                                 ✕ Отмена
                                                             </button>
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div className="flex-1 flex flex-col gap-2">
-                                                        <div className="flex gap-2 items-center">
-                                                            <div className={`text-lg font-bold text-white px-4 py-2 rounded-lg ${getGradeColor(g.grade_value)}`}>{g.grade_value}</div>
+                                                    <div className="flex-1 flex flex-col gap-2 mt-2 sm:mt-0">
+                                                        <div className="flex gap-2 items-center justify-end sm:justify-start flex-wrap">
+                                                            <div className={`text-base sm:text-lg font-bold text-white px-3 sm:px-4 py-1 sm:py-2 rounded-lg ${getGradeColor(g.grade_value)}`}>{g.grade_value}</div>
                                                             <button
                                                                 onClick={() => handleEditGrade(g.id, g.grade_value, g.comment || '')}
                                                                 className="text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition-all"
+                                                                title="Редактировать"
                                                             >
-                                                                <Edit2 size={18} />
+                                                                <Edit2 size={16} className="sm:w-5 sm:h-5" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteGrade(g.id)}
+                                                                className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all"
+                                                                title="Удалить"
+                                                            >
+                                                                <Trash2 size={16} className="sm:w-5 sm:h-5" />
                                                             </button>
                                                         </div>
                                                         {g.comment && (
@@ -490,7 +523,7 @@ export default function TeacherClient() {
                                         </div>
                                     ))
                                 ) : (
-                                    <p className="text-center text-slate-400 py-4">Нет оценок</p>
+                                    <p className="text-center text-slate-400 py-4 text-sm sm:text-base">Нет оценок</p>
                                 )}
                             </div>
                         </div>
@@ -499,20 +532,20 @@ export default function TeacherClient() {
 
                 {/* Вкладка: Студенты */}
                 {activeTab === 'students' && (
-                    <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-                        <h2 className="text-xl font-bold text-purple-600 mb-6">Студенты группы {group}</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-[2.5rem] shadow-sm border border-slate-100">
+                        <h2 className="text-lg sm:text-xl font-bold text-purple-600 mb-4 sm:mb-6">Студенты группы {group}</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                             {allStudents.length > 0 ? (
                                 allStudents.map(student => (
-                                    <div key={student.used_by} className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                                        <div className="font-bold text-slate-800">{student.full_name}</div>
-                                        <div className={`text-xs mt-2 px-3 py-1 rounded-full font-bold inline-block ${student.used_by ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                                            {student.used_by ? '✓ Зарегистрирован' : '○ Не зарегистрирован'}
+                                    <div key={student.used_by} className="p-3 sm:p-4 bg-slate-50 rounded-lg sm:rounded-2xl border border-slate-200">
+                                        <div className="font-bold text-slate-800 text-sm sm:text-base truncate">{student.full_name}</div>
+                                        <div className={`text-xs mt-2 px-2 sm:px-3 py-1 rounded-full font-bold inline-block ${student.used_by ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                            {student.used_by ? '✓ Зарег.' : '○ Не зарег.'}
                                         </div>
                                     </div>
                                 ))
                             ) : (
-                                <p className="col-span-full text-center text-slate-400 py-8">Нет студентов в группе</p>
+                                <p className="col-span-full text-center text-slate-400 py-6 sm:py-8 text-sm sm:text-base">Нет студентов в группе</p>
                             )}
                         </div>
                     </div>
