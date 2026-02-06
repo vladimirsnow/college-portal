@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
-import { BookOpen, Star, PlusCircle, LogOut, Trash2, Users, Edit2 } from 'lucide-react'
+import { BookOpen, Star, PlusCircle, LogOut, Trash2, Users, Edit2, X } from 'lucide-react'
 import {
     fetchAllGroups,
     fetchStudentsByGroup,
@@ -37,6 +37,8 @@ export default function TeacherClient() {
     const [editingGradeId, setEditingGradeId] = useState(null)
     const [editingGradeValue, setEditingGradeValue] = useState('')
     const [editingGradeComment, setEditingGradeComment] = useState('')
+    const [showEditModal, setShowEditModal] = useState(false)
+    const [studentFilter, setStudentFilter] = useState('')
     const router = useRouter()
     const [teacherId, setTeacherId] = useState(null)
     const [teacherName, setTeacherName] = useState('')
@@ -102,6 +104,11 @@ export default function TeacherClient() {
         setLoading(true)
         try {
             const data = await fetchStudentsByGroup(group)
+            console.log('Загруженные студенты:', data)
+            if (data && data.length > 0) {
+                console.log('Первый студент структура:', data[0])
+                console.log('Все used_by значения:', data.map(s => ({ used_by: s.used_by, full_name: s.full_name })))
+            }
             setStudents(data)
             setAllStudents(data)
         } finally {
@@ -116,6 +123,7 @@ export default function TeacherClient() {
 
     async function fetchGradesList() {
         const data = await fetchGradesByGroup(group)
+        console.log('Загруженные оценки:', data)
         setGrades(data)
     }
 
@@ -146,13 +154,31 @@ export default function TeacherClient() {
 
     const handleAddGrade = async () => {
         if (!selectedStudent || !grade || !subject) return alert("Заполните все поля")
+
+        console.log('handleAddGrade вызван с selectedStudentName:', selectedStudentName)
+
+        // Валидация оценки
+        const gradeNum = parseInt(grade, 10)
+        if (isNaN(gradeNum) || gradeNum < 1 || gradeNum > 100) {
+            return alert("Оценка должна быть целым числом от 1 до 100")
+        }
+
         setLoading(true)
         try {
+            // Получаем объект студента по индексу
+            const studentIndex = parseInt(selectedStudent, 10)
+            const selectedStudentObj = allStudents[studentIndex]
+            const studentName = selectedStudentObj?.full_name || selectedStudentObj?.name || selectedStudentName || 'Неизвестный студент'
+            const studentId = selectedStudentObj?.used_by || selectedStudentObj?.id || selectedStudent
+
+            console.log('Отправляем оценку:', { student_id: studentId, student_name: studentName, group_name: group, subject, grade_value: gradeNum })
             const result = await createGrade({
-                student_id: selectedStudent,
+                student_id: studentId,
+                student_name: studentName,
                 group_name: group,
                 subject,
-                grade_value: parseInt(grade, 10),
+                grade_value: gradeNum,
+                comment: gradeComment,
                 teacher_name: teacherName
             })
             if (result.success) {
@@ -206,21 +232,36 @@ export default function TeacherClient() {
             setLoading(false)
         }
     }
-
     const handleEditGrade = (id, value, comment) => {
         setEditingGradeId(id)
         setEditingGradeValue(value)
         setEditingGradeComment(comment)
+        setShowEditModal(true)
     }
+
+    const closeEditModal = () => {
+        setShowEditModal(false)
+        setEditingGradeId(null)
+        setEditingGradeValue('')
+        setEditingGradeComment('')
+    }
+
 
     const handleUpdateGrade = async () => {
         if (!editingGradeId) return
+
+        // Валидация оценки
+        const gradeNum = parseInt(editingGradeValue, 10)
+        if (isNaN(gradeNum) || gradeNum < 1 || gradeNum > 100) {
+            return alert("Оценка должна быть целым числом от 1 до 100")
+        }
+
         setLoading(true)
         try {
-            const result = await updateGrade(editingGradeId, parseInt(editingGradeValue, 10), editingGradeComment)
+            const result = await updateGrade(editingGradeId, gradeNum, editingGradeComment)
             if (result.success) {
                 alert('Оценка обновлена')
-                setEditingGradeId(null)
+                closeEditModal()
                 await fetchGradesList()
             } else {
                 alert('Ошибка: ' + result.error)
@@ -314,7 +355,7 @@ export default function TeacherClient() {
                             <select
                                 value={subject}
                                 onChange={e => setSubject(e.target.value)}
-                                className="w-full p-3 sm:p-4 mb-3 sm:mb-4 bg-slate-50 border border-slate-200 rounded-lg sm:rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 text-sm sm:text-base"
+                                className="w-full p-3 sm:p-4 mb-3 sm:mb-4 bg-slate-50 border border-slate-200 rounded-lg sm:rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 text-sm sm:text-base text-slate-700"
                             >
                                 <option value="">Выбрать предмет...</option>
                                 {subjects.map(s => (
@@ -402,16 +443,29 @@ export default function TeacherClient() {
                             <select
                                 value={selectedStudent}
                                 onChange={e => {
-                                    const selected = allStudents.find(s => s.used_by === e.target.value)
-                                    setSelectedStudent(e.target.value)
-                                    setSelectedStudentName(selected?.full_name || '')
+                                    const studentIndex = parseInt(e.target.value, 10)
+                                    console.log('Выбран студент индекс:', studentIndex)
+
+                                    const selected = allStudents[studentIndex]
+                                    console.log('Найденный студент:', selected)
+
+                                    if (selected) {
+                                        setSelectedStudent(studentIndex)
+                                        const studentName = selected.full_name || selected.name || 'Неизвестный студент'
+                                        console.log('Установлено имя студента:', studentName)
+                                        setSelectedStudentName(studentName)
+                                    } else {
+                                        console.warn('Студент не найден по индексу')
+                                        setSelectedStudent('')
+                                        setSelectedStudentName('')
+                                    }
                                 }}
                                 className="w-full p-3 sm:p-4 mb-3 sm:mb-4 bg-slate-50 border border-slate-200 rounded-lg sm:rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 text-slate-900 text-sm sm:text-base"
                             >
                                 <option value="">Выбрать студента...</option>
-                                {allStudents.map(s => (
-                                    <option key={s.used_by} value={s.used_by}>
-                                        {s.full_name}
+                                {allStudents.map((s, index) => (
+                                    <option key={index} value={index}>
+                                        {s.full_name || s.name}
                                     </option>
                                 ))}
                             </select>
@@ -421,9 +475,20 @@ export default function TeacherClient() {
                                 placeholder="Баллы (1-100)"
                                 min="1"
                                 max="100"
+                                step="1"
                                 className="w-full p-3 sm:p-4 mb-3 sm:mb-4 bg-slate-50 border border-slate-200 rounded-lg sm:rounded-2xl outline-none focus:ring-2 focus:ring-purple-200 text-slate-900 text-sm sm:text-base"
                                 value={grade}
-                                onChange={e => setGrade(e.target.value)}
+                                onChange={e => {
+                                    const value = e.target.value
+                                    if (value === '') {
+                                        setGrade('')
+                                    } else {
+                                        const num = parseInt(value, 10)
+                                        if (!isNaN(num) && num >= 1 && num <= 100) {
+                                            setGrade(value)
+                                        }
+                                    }
+                                }}
                             />
 
                             <label className="block text-xs sm:text-sm font-bold text-slate-600 mb-1 sm:mb-2">Комментарий (опционально):</label>
@@ -445,52 +510,30 @@ export default function TeacherClient() {
 
                         {/* История оценок */}
                         <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-[2.5rem] shadow-sm border border-slate-100">
-                            <h2 className="text-lg sm:text-xl font-bold text-purple-600 mb-4 sm:mb-6">История оценок</h2>
+                            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                                <h2 className="text-lg sm:text-xl font-bold text-purple-600">История оценок</h2>
+                                <input
+                                    type="text"
+                                    placeholder="Фильтр по имени студента..."
+                                    value={studentFilter}
+                                    onChange={e => setStudentFilter(e.target.value)}
+                                    className="px-3 sm:px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-purple-500 transition-all"
+                                />
+                            </div>
                             <div className="space-y-3 sm:space-y-4 max-h-96 overflow-y-auto">
-                                {grades.length > 0 ? (
-                                    grades.map((g) => (
-                                        <div key={g.id} className="p-3 sm:p-4 bg-slate-50 rounded-lg sm:rounded-2xl border border-slate-200">
-                                            <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-2 sm:gap-3">
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="font-bold text-slate-800 text-sm sm:text-base">{g.subject}</div>
-                                                    <div className="text-xs sm:text-sm text-slate-600 truncate">Студент: {g.student_id}</div>
-                                                    <div className="text-xs text-slate-400">Дата: {new Date(g.created_at).toLocaleDateString('ru-RU')}</div>
-                                                </div>
-                                                {editingGradeId === g.id ? (
-                                                    <div className="w-full flex flex-col gap-2 mt-2 sm:mt-0">
-                                                        <div className="flex gap-2">
-                                                            <input
-                                                                type="number"
-                                                                min="1"
-                                                                max="100"
-                                                                value={editingGradeValue}
-                                                                onChange={e => setEditingGradeValue(e.target.value)}
-                                                                className="flex-1 p-2 bg-white border border-purple-200 rounded-lg text-center text-slate-900 text-sm"
-                                                            />
-                                                        </div>
-                                                        <textarea
-                                                            placeholder="Комментарий..."
-                                                            value={editingGradeComment}
-                                                            onChange={e => setEditingGradeComment(e.target.value)}
-                                                            className="w-full p-2 bg-white border border-purple-200 rounded-lg text-sm resize-none h-16 text-slate-900"
-                                                        />
-                                                        <div className="flex gap-2">
-                                                            <button
-                                                                onClick={handleUpdateGrade}
-                                                                disabled={loading}
-                                                                className="flex-1 bg-green-500 text-white px-3 py-2 rounded-lg hover:bg-green-600 transition-all text-xs sm:text-sm font-bold"
-                                                            >
-                                                                ✓ Сохранить
-                                                            </button>
-                                                            <button
-                                                                onClick={() => setEditingGradeId(null)}
-                                                                className="flex-1 bg-gray-400 text-white px-3 py-2 rounded-lg hover:bg-gray-500 transition-all text-xs sm:text-sm font-bold"
-                                                            >
-                                                                ✕ Отмена
-                                                            </button>
-                                                        </div>
+                                {grades.filter(g =>
+                                    (g.student_name || g.student_id).toLowerCase().includes(studentFilter.toLowerCase())
+                                ).length > 0 ? (
+                                    grades
+                                        .filter(g => (g.student_name || g.student_id).toLowerCase().includes(studentFilter.toLowerCase()))
+                                        .map((g) => (
+                                            <div key={g.id} className="p-3 sm:p-4 bg-slate-50 rounded-lg sm:rounded-2xl border border-slate-200">
+                                                <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-2 sm:gap-3">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="font-bold text-slate-800 text-sm sm:text-base">{g.subject}</div>
+                                                        <div className="text-xs sm:text-sm text-slate-600 truncate">Студент: {g.student_name || 'Неизвестный студент'}</div>
+                                                        <div className="text-xs text-slate-400">Дата: {new Date(g.created_at).toLocaleDateString('ru-RU')}</div>
                                                     </div>
-                                                ) : (
                                                     <div className="flex-1 flex flex-col gap-2 mt-2 sm:mt-0">
                                                         <div className="flex gap-2 items-center justify-end sm:justify-start flex-wrap">
                                                             <div className={`text-base sm:text-lg font-bold text-white px-3 sm:px-4 py-1 sm:py-2 rounded-lg ${getGradeColor(g.grade_value)}`}>{g.grade_value}</div>
@@ -515,12 +558,13 @@ export default function TeacherClient() {
                                                             </div>
                                                         )}
                                                     </div>
-                                                )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))
+                                        ))
                                 ) : (
-                                    <p className="text-center text-slate-400 py-4 text-sm sm:text-base">Нет оценок</p>
+                                    <p className="text-center text-slate-400 py-4 text-sm sm:text-base">
+                                        {studentFilter ? 'Оценок не найдено' : 'Нет оценок'}
+                                    </p>
                                 )}
                             </div>
                         </div>
@@ -548,6 +592,79 @@ export default function TeacherClient() {
                     </div>
                 )}
             </main>
+
+            {/* Модальное окно редактирования оценки */}
+            {showEditModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+                        {/* Header */}
+                        <div className="flex justify-between items-center p-6 border-b border-slate-200">
+                            <h2 className="text-xl font-bold text-slate-800">Редактировать оценку</h2>
+                            <button
+                                onClick={closeEditModal}
+                                className="text-slate-400 hover:text-slate-600 transition-all"
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 space-y-4">
+                            {/* Grade input */}
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-2">Оценка (1-100)</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="100"
+                                    step="1"
+                                    value={editingGradeValue}
+                                    onChange={e => {
+                                        const value = e.target.value
+                                        if (value === '') {
+                                            setEditingGradeValue('')
+                                        } else {
+                                            const num = parseInt(value, 10)
+                                            if (!isNaN(num) && num >= 1 && num <= 100) {
+                                                setEditingGradeValue(value)
+                                            }
+                                        }
+                                    }}
+                                    className="w-full p-3 bg-white border-2 border-slate-300 rounded-lg text-center text-slate-900 text-lg font-bold focus:border-purple-500 focus:outline-none transition-all"
+                                />
+                            </div>
+
+                            {/* Comment input */}
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-2">Комментарий</label>
+                                <textarea
+                                    placeholder="Введите комментарий к оценке..."
+                                    value={editingGradeComment}
+                                    onChange={e => setEditingGradeComment(e.target.value)}
+                                    className="w-full p-3 bg-white border-2 border-slate-300 rounded-lg text-sm resize-none h-24 text-slate-900 focus:border-purple-500 focus:outline-none transition-all"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Buttons */}
+                        <div className="flex gap-3 p-6 border-t border-slate-200">
+                            <button
+                                onClick={closeEditModal}
+                                className="flex-1 bg-slate-200 text-slate-800 px-4 py-3 rounded-lg hover:bg-slate-300 transition-all font-bold"
+                            >
+                                Отмена
+                            </button>
+                            <button
+                                onClick={handleUpdateGrade}
+                                disabled={loading}
+                                className="flex-1 bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 transition-all font-bold disabled:opacity-50"
+                            >
+                                {loading ? 'Сохранение...' : 'Сохранить'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
